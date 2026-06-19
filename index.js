@@ -34,12 +34,28 @@ async function run() {
     const bookCollection = db.collection('books');
     const bookmarkCollection = db.collection('bookmarks');
 
+    // app.get('/api/books', async (req, res) => {
+    //         const result = await bookCollection.find().toArray();
+
+    //         res.send(result);
+    //     })
 
     app.get('/api/books', async (req, res) => {
-            const result = await bookCollection.find().toArray();
+    try {
+        // লজিক: status ফিল্ড "published" হতে হবে অথবা status ফিল্ডটি ডেটাবেজে থাকাই যাবে না (পুরনো ডেটার জন্য)
+        // কিন্তু status: "unpublished" হলে সেটি ফিল্টারে আসবে না।
+        const query = {
+            $or: [
+                { status: "published" }
+            ]
+        };
 
-            res.send(result);
-        })
+        const result = await bookCollection.find(query).toArray();
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Failed to fetch books", error: error.message });
+    }
+});
 
     app.get('/api/my/books', async(req, res) =>{
         const query = {}
@@ -69,6 +85,65 @@ async function run() {
             const result = await bookCollection.insertOne(newBook);
             res.send(result);
         })
+
+
+    
+    // ১. বইয়ের সাধারণ তথ্য এডিট করার এপিআই
+app.patch('/api/ebooks/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const updatedData = req.body;
+        
+        // আইডি ভ্যালিডেশন
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+            $set: {
+                title: updatedData.title,
+                description: updatedData.description,
+                price: parseFloat(updatedData.price),
+                genre: updatedData.genre,
+                coverImage: updatedData.coverImage
+            }
+        };
+
+        const result = await bookCollection.updateOne(query, updateDoc);
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Error updating ebook info", error: error.message });
+    }
+});
+
+// ২. বইয়ের লাইভ স্ট্যাটাস (published / unpublished) টগল করার এপিআই
+app.patch('/api/ebooks/status/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { status } = req.body; // "published" অথবা "unpublished"
+
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+            $set: { status: status }
+        };
+
+        const result = await bookCollection.updateOne(query, updateDoc);
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Error updating status", error: error.message });
+    }
+});
+
+// ৩. বই ডিলিট করার এপিআই
+app.delete('/api/ebooks/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        
+        const result = await bookCollection.deleteOne(query);
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Error deleting ebook", error: error.message });
+    }
+});
+
 
     // Bookmark related apis
 
