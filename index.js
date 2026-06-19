@@ -32,6 +32,7 @@ async function run() {
 
     const db = client.db('fable_ebook_db');
     const bookCollection = db.collection('books');
+    const bookmarkCollection = db.collection('bookmarks');
 
 
     app.get('/api/books', async (req, res) => {
@@ -52,16 +53,12 @@ async function run() {
 
     app.get('/api/books/:id', async (req, res) => {
         const id = req.params.id;
-        
-        // ভুল আইডি ফরম্যাটের কারণে সার্ভার ক্র্যাশ করা আটকানোর ফিক্স
         const query = {
             _id: new ObjectId(id)
         }
         const result = await bookCollection.findOne(query);
         res.send(result);
     });
-
-    
 
     app.post('/api/books', async (req, res) => {
             const book = req.body;
@@ -72,6 +69,39 @@ async function run() {
             const result = await bookCollection.insertOne(newBook);
             res.send(result);
         })
+
+    // Bookmark related apis
+
+    app.get('/api/my/bookmarks', async(req, res) =>{
+        const query = {}
+        if (req.query.userId) {
+                query.userId = req.query.userId;
+            }
+            const result = await bookmarkCollection.find(query).toArray();
+
+        res.send(result);
+    })
+
+    app.post('/api/bookmarks', async (req, res) => {
+        try {
+            const bookmark = req.body;
+            
+            // চেক করা হচ্ছে এই ইউজার অলরেডি এই বইটি বুকমার্ক করেছে কিনা
+            const alreadyBookmarked = await bookmarkCollection.findOne({
+                bookId: bookmark.bookId,
+                userId: bookmark.userId
+            });
+
+            if (alreadyBookmarked) {
+                return res.status(400).send({ message: "Already bookmarked by this user" });
+            }
+
+            const result = await bookmarkCollection.insertOne(bookmark);
+            res.send(result);
+        } catch (error) {
+            res.status(500).send({ message: "Server Error", error: error.message });
+        }
+    });
 
 
     await client.db("admin").command({ ping: 1 });
