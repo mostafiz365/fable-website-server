@@ -156,17 +156,6 @@ app.delete('/api/ebooks/:id', async (req, res) => {
             }
             const result = await purchaseBookCollection.insertOne(newPurchaseBook);
 
-        //     if (purchaseBook.bookId && purchaseBook.userId) {
-            
-        //     // আপনার আসল বইয়ের কালেকশনের নাম (যেমন: bookCollection) এখানে ব্যবহার করবেন
-        //     await bookCollection.updateOne(
-        //          purchaseBook.bookId , // অথবা শুধু purchaseBook.bookId (যদি আইডি স্ট্রিং আকারে থাকে)
-        //         { 
-        //             // $addToSet দিলে একই ইউজারের আইডি ডুপ্লিকেট হয়ে বারবার পুশ হবে না, একবারই হবে
-        //             $addToSet: { purchasedUsers: purchaseBook.userId } 
-        //         }
-        //     );
-        // }
         if (purchaseBook.bookId && purchaseBook.userId) {
             
             let query = {};
@@ -186,10 +175,30 @@ app.delete('/api/ebooks/:id', async (req, res) => {
                     $addToSet: { purchasedUsers: String(purchaseBook.userId) } 
                 }
             );
-            console.log(`Successfully added user ${purchaseBook.userId} to book ${purchaseBook.bookId}`);
         }
             res.send(result);
     })
+
+    app.get('/api/purchase', async (req, res) => {
+        const result = await purchaseBookCollection.find().toArray();
+        res.send(result);
+});
+
+    app.get('/api/purchase/writer/:writerId', async (req, res) => {
+        const writerId = req.params.writerId;
+        // আপনার ডাটাবেজের ইমেজ অনুযায়ী ফিল্ডের নাম 'writerId'
+        const query = { writerId: writerId }; 
+        const result = await purchaseBookCollection.find(query).toArray();
+        res.send(result);
+});
+
+    app.get('/api/purchase/user/:userId', async (req, res) => {
+        const userId = req.params.userId;
+        // আপনার ডাটাবেজের ইমেজ অনুযায়ী ফিল্ডের নাম 'userId'
+        const query = { userId: userId };
+        const result = await purchaseBookCollection.find(query).toArray();
+        res.send(result);
+});
 
 
     // Bookmark related apis
