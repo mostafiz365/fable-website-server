@@ -33,6 +33,7 @@ async function run() {
     const db = client.db('fable_ebook_db');
     const bookCollection = db.collection('books');
     const bookmarkCollection = db.collection('bookmarks');
+    const purchaseBookCollection = db.collection('purchaseBooks');
 
     // app.get('/api/books', async (req, res) => {
     //         const result = await bookCollection.find().toArray();
@@ -143,6 +144,52 @@ app.delete('/api/ebooks/:id', async (req, res) => {
         res.status(500).send({ message: "Error deleting ebook", error: error.message });
     }
 });
+
+
+    // purchaseBook related apis
+
+    app.post('/api/purchase', async(req, res) =>{
+        const purchaseBook = req.body;
+            const newPurchaseBook = {
+                ...purchaseBook,
+                createdAt: new Date()
+            }
+            const result = await purchaseBookCollection.insertOne(newPurchaseBook);
+
+        //     if (purchaseBook.bookId && purchaseBook.userId) {
+            
+        //     // আপনার আসল বইয়ের কালেকশনের নাম (যেমন: bookCollection) এখানে ব্যবহার করবেন
+        //     await bookCollection.updateOne(
+        //          purchaseBook.bookId , // অথবা শুধু purchaseBook.bookId (যদি আইডি স্ট্রিং আকারে থাকে)
+        //         { 
+        //             // $addToSet দিলে একই ইউজারের আইডি ডুপ্লিকেট হয়ে বারবার পুশ হবে না, একবারই হবে
+        //             $addToSet: { purchasedUsers: purchaseBook.userId } 
+        //         }
+        //     );
+        // }
+        if (purchaseBook.bookId && purchaseBook.userId) {
+            
+            let query = {};
+            try {
+                // মঙ্গোডিবির নিয়ম অনুযায়ী _id ফিল্টার অবজেক্ট এবং ObjectId কনভার্সন
+                query = { _id: new ObjectId(purchaseBook.bookId) };
+            } catch (e) {
+                // যদি আপনার বইয়ের কালেকশনে আইডি সাধারণ স্ট্রিং ফরম্যাটে থাকে
+                query = { _id: purchaseBook.bookId };
+            }
+
+            // বইয়ের কালেকশনে purchasedUsers অ্যারে আপডেট করা হচ্ছে
+            await bookCollection.updateOne(
+                query, // 👈 মঙ্গোডিবির সঠিক ফিল্টার অবজেক্ট
+                { 
+                    // $addToSet একই ইউজারের আইডি ডুপ্লিকেট হতে দেবে না
+                    $addToSet: { purchasedUsers: String(purchaseBook.userId) } 
+                }
+            );
+            console.log(`Successfully added user ${purchaseBook.userId} to book ${purchaseBook.bookId}`);
+        }
+            res.send(result);
+    })
 
 
     // Bookmark related apis
