@@ -34,12 +34,67 @@ async function run() {
     const bookCollection = db.collection('books');
     const bookmarkCollection = db.collection('bookmarks');
     const purchaseBookCollection = db.collection('purchaseBooks');
+    const userCollection = db.collection('user');
 
-    // app.get('/api/books', async (req, res) => {
-    //         const result = await bookCollection.find().toArray();
+    app.get('/api/users', async(req, res) =>{
+        const result = await userCollection.find().toArray();
+        res.send(result);
+    })
 
-    //         res.send(result);
-    //     })
+//     app.patch('/api/users/role/:id', async (req, res) => {
+//     try {
+//         const id = req.params.id;
+//         const { role } = req.body; // ক্লায়েন্ট থেকে পাঠানো নতুন রোল
+        
+//         const filter = { _id: new ObjectId(id) };
+//         const updateDoc = {
+//             $set: {
+//                 role: role,
+//                 updatedAt: new Date()
+//             },
+//         };
+
+//         const result = await userCollection.updateOne(filter, updateDoc);
+        
+//         // মেটাডেটা সরাসরি না পাঠিয়ে একটি সাকসেস রেসপন্স নিশ্চিত করা
+//         if (result.modifiedCount > 0 || result.matchedCount > 0) {
+//             res.send({ success: true, updatedRole: role });
+//         } else {
+//             res.status(400).send({ success: false, message: "No changes made" });
+//         }
+//     } catch (error) {
+//         res.status(500).send({ success: false, error: error.message });
+//     }
+// });
+
+//     app.patch('/api/users/role/:id', async (req, res) => {
+//         console.log(req.body);
+//         const id = req.params.id;
+//         const { role } = req.body; // ক্লায়েন্ট থেকে পাঠানো নতুন রোল ('reader', 'writer', 'admin')
+        
+//         const filter = { _id: new ObjectId(id) };
+//         const updateDoc = {
+//             $set: {
+//                 role: role,
+//                 updatedAt: new Date() // আপডেট টাইম ট্র্যাকিংয়ের জন্য
+//             },
+//         };
+//         const result = await userCollection.updateOne(filter, updateDoc);
+//         res.send(result);
+// });
+
+    app.delete('/api/users/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await userCollection.deleteOne(query);
+        res.send(result);
+});
+
+    app.get('/api/all-books', async (req, res) => {
+            const result = await bookCollection.find().toArray();
+
+            res.send(result);
+        })
 
     app.get('/api/books', async (req, res) => {
     try {
