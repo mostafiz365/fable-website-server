@@ -96,6 +96,44 @@ async function run() {
             res.send(result);
         })
 
+    app.patch('/api/admin/ebooks/status/:id', async (req, res) => {
+        const id = req.params.id;
+        const { status, adminEmail } = req.body;
+
+        const user = await userCollection.findOne({ email: adminEmail });
+        if (!user || user.role !== "admin") {
+            return res.status(403).send({ message: "Forbidden! Only admins can change book status." });
+        }
+
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+            $set: { status: status } // "published" অথবা "unpublished"
+        };
+
+        const result = await bookCollection.updateOne(query, updateDoc);
+        res.send(result);
+    }
+);
+
+    app.delete('/api/admin/ebooks/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const adminEmail = req.query.email; // ডিলিট রিকোয়েস্টে সাধারণত বডি থাকে না, তাই কুয়েরি প্যারামিটার (?email=...) থেকে নেওয়া হলো
+
+        // 🛡️ সিকিউরিটি চেক: রিকোয়েস্টকারী আসলেই অ্যাডমিন কিনা ডাটাবেজে ভেরিফাই করা
+        const user = await userCollection.findOne({ email: adminEmail });
+        if (!user || user.role !== "admin") {
+            return res.status(403).send({ message: "Forbidden! Only admins can delete books." });
+        }
+
+        const query = { _id: new ObjectId(id) };
+        const result = await bookCollection.deleteOne(query);
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Admin failed to delete ebook", error: error.message });
+    }
+});
+
     app.get('/api/books', async (req, res) => {
     try {
         // লজিক: status ফিল্ড "published" হতে হবে অথবা status ফিল্ডটি ডেটাবেজে থাকাই যাবে না (পুরনো ডেটার জন্য)
