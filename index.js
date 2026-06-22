@@ -11,11 +11,38 @@ app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
+const JWKS = createRemoteJWKSet(
+    new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
+)
+
+const verifyToken = async(req, res, next) =>{
+    const authHeader = req?.headers.authorization;
+    console.log(authHeader)
+    if(!authHeader){
+        return res.status(401).json({message:"Unauthorized"})
+    }
+    const token = authHeader.split(" ")[1];
+    console.log(token)
+    if(!token){
+        return res.status(401).json({message:"Unauthorized"})
+    }
+
+    try{
+        const {payload} = await jwtVerify(token, JWKS);
+        console.log(payload)
+        next();
+    }catch(error){
+        console.log(error)
+        res.status(403).json({message:"Forbidden"})
+        
+    }
+}
 
 const uri = process.env.MONGODB_URI;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,7 +63,7 @@ async function run() {
     const purchaseBookCollection = db.collection('purchaseBooks');
     const userCollection = db.collection('user');
 
-    app.get('/api/users', async(req, res) =>{
+    app.get('/api/users', verifyToken, async(req, res) =>{
         const result = await userCollection.find().toArray();
         res.send(result);
     })
@@ -90,7 +117,7 @@ async function run() {
         res.send(result);
 });
 
-    app.get('/api/all-books', async (req, res) => {
+    app.get('/api/all-books', verifyToken, async (req, res) => {
             const result = await bookCollection.find().toArray();
 
             res.send(result);
@@ -151,7 +178,7 @@ async function run() {
     }
 });
 
-    app.get('/api/my/books', async(req, res) =>{
+    app.get('/api/my/books', verifyToken, async(req, res) =>{
         const query = {}
         if (req.query.userId) {
                 query.userId = req.query.userId;
@@ -272,7 +299,7 @@ app.delete('/api/ebooks/:id', async (req, res) => {
             res.send(result);
     })
 
-    app.get('/api/purchase', async (req, res) => {
+    app.get('/api/purchase', verifyToken, async (req, res) => {
         const result = await purchaseBookCollection.find().toArray();
         res.send(result);
 });
@@ -285,7 +312,7 @@ app.delete('/api/ebooks/:id', async (req, res) => {
         res.send(result);
 });
 
-    app.get('/api/purchase/user/:userId', async (req, res) => {
+    app.get('/api/purchase/user/:userId', verifyToken, async (req, res) => {
         const userId = req.params.userId;
         // আপনার ডাটাবেজের ইমেজ অনুযায়ী ফিল্ডের নাম 'userId'
         const query = { userId: userId };
@@ -296,7 +323,7 @@ app.delete('/api/ebooks/:id', async (req, res) => {
 
     // Bookmark related apis
 
-    app.get('/api/my/bookmarks', async(req, res) =>{
+    app.get('/api/my/bookmarks', verifyToken, async(req, res) =>{
         const query = {}
         if (req.query.userId) {
                 query.userId = req.query.userId;
