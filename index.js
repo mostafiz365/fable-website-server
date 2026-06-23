@@ -178,6 +178,22 @@ async function run() {
     }
 });
 
+app.get('/api/featured-books', async (req, res) => {
+        const query = {
+            $or: [
+                { status: "published" }
+            ]
+        };
+
+        const result = await bookCollection
+            .find(query)
+            .sort({ createdAt: -1 })
+            .limit(6)
+            .toArray();
+
+        res.send(result);
+});
+
     app.get('/api/my/books', verifyToken, async(req, res) =>{
         const query = {}
         if (req.query.userId) {
