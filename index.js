@@ -117,6 +117,8 @@ async function run() {
         res.send(result);
 });
 
+    // Books related apis
+
     app.get('/api/all-books', verifyToken, async (req, res) => {
             const result = await bookCollection.find().toArray();
 
@@ -184,7 +186,6 @@ app.get('/api/featured-books', async (req, res) => {
                 { status: "published" }
             ]
         };
-
         const result = await bookCollection
             .find(query)
             .sort({ createdAt: -1 })
