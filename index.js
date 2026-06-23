@@ -285,6 +285,11 @@ app.delete('/api/ebooks/:id', async (req, res) => {
 
     // purchaseBook related apis
 
+        app.get('/api/purchase', verifyToken, async (req, res) => {
+        const result = await purchaseBookCollection.find().toArray();
+        res.send(result);
+        });
+
     app.post('/api/purchase', async(req, res) =>{
         const purchaseBook = req.body;
             const newPurchaseBook = {
@@ -297,14 +302,11 @@ app.delete('/api/ebooks/:id', async (req, res) => {
             
             let query = {};
             try {
-                // মঙ্গোডিবির নিয়ম অনুযায়ী _id ফিল্টার অবজেক্ট এবং ObjectId কনভার্সন
                 query = { _id: new ObjectId(purchaseBook.bookId) };
             } catch (e) {
-                // যদি আপনার বইয়ের কালেকশনে আইডি সাধারণ স্ট্রিং ফরম্যাটে থাকে
                 query = { _id: purchaseBook.bookId };
             }
 
-            // বইয়ের কালেকশনে purchasedUsers অ্যারে আপডেট করা হচ্ছে
             await bookCollection.updateOne(
                 query, // 👈 মঙ্গোডিবির সঠিক ফিল্টার অবজেক্ট
                 { 
@@ -316,10 +318,6 @@ app.delete('/api/ebooks/:id', async (req, res) => {
             res.send(result);
     })
 
-    app.get('/api/purchase', verifyToken, async (req, res) => {
-        const result = await purchaseBookCollection.find().toArray();
-        res.send(result);
-});
 
     app.get('/api/purchase/writer/:writerId', async (req, res) => {
         const writerId = req.params.writerId;
@@ -353,8 +351,6 @@ app.delete('/api/ebooks/:id', async (req, res) => {
     app.post('/api/bookmarks', async (req, res) => {
         try {
             const bookmark = req.body;
-            
-            // চেক করা হচ্ছে এই ইউজার অলরেডি এই বইটি বুকমার্ক করেছে কিনা
             const alreadyBookmarked = await bookmarkCollection.findOne({
                 bookId: bookmark.bookId,
                 userId: bookmark.userId
