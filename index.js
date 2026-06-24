@@ -69,33 +69,6 @@ async function run() {
     })
 
 //     app.patch('/api/users/role/:id', async (req, res) => {
-//     try {
-//         const id = req.params.id;
-//         const { role } = req.body; // ক্লায়েন্ট থেকে পাঠানো নতুন রোল
-        
-//         const filter = { _id: new ObjectId(id) };
-//         const updateDoc = {
-//             $set: {
-//                 role: role,
-//                 updatedAt: new Date()
-//             },
-//         };
-
-//         const result = await userCollection.updateOne(filter, updateDoc);
-        
-//         // মেটাডেটা সরাসরি না পাঠিয়ে একটি সাকসেস রেসপন্স নিশ্চিত করা
-//         if (result.modifiedCount > 0 || result.matchedCount > 0) {
-//             res.send({ success: true, updatedRole: role });
-//         } else {
-//             res.status(400).send({ success: false, message: "No changes made" });
-//         }
-//     } catch (error) {
-//         res.status(500).send({ success: false, error: error.message });
-//     }
-// });
-
-//     app.patch('/api/users/role/:id', async (req, res) => {
-//         console.log(req.body);
 //         const id = req.params.id;
 //         const { role } = req.body; // ক্লায়েন্ট থেকে পাঠানো নতুন রোল ('reader', 'writer', 'admin')
         
