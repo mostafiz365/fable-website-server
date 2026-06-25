@@ -23,19 +23,16 @@ const JWKS = createRemoteJWKSet(
 
 const verifyToken = async(req, res, next) =>{
     const authHeader = req?.headers.authorization;
-    console.log(authHeader)
     if(!authHeader){
         return res.status(401).json({message:"Unauthorized"})
     }
     const token = authHeader.split(" ")[1];
-    console.log(token)
     if(!token){
         return res.status(401).json({message:"Unauthorized"})
     }
 
     try{
         const {payload} = await jwtVerify(token, JWKS);
-        console.log(payload)
         next();
     }catch(error){
         console.log(error)
@@ -68,20 +65,20 @@ async function run() {
         res.send(result);
     })
 
-//     app.patch('/api/users/role/:id', async (req, res) => {
-//         const id = req.params.id;
-//         const { role } = req.body; // ক্লায়েন্ট থেকে পাঠানো নতুন রোল ('reader', 'writer', 'admin')
+    app.patch('/api/users/role/:id', async (req, res) => {
+        const id = req.params.id;
+        const { role } = req.body; // ক্লায়েন্ট থেকে পাঠানো নতুন রোল ('reader', 'writer', 'admin')
         
-//         const filter = { _id: new ObjectId(id) };
-//         const updateDoc = {
-//             $set: {
-//                 role: role,
-//                 updatedAt: new Date() // আপডেট টাইম ট্র্যাকিংয়ের জন্য
-//             },
-//         };
-//         const result = await userCollection.updateOne(filter, updateDoc);
-//         res.send(result);
-// });
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+            $set: {
+                role: role,
+                updatedAt: new Date() // আপডেট টাইম ট্র্যাকিংয়ের জন্য
+            },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result);
+});
 
     app.delete('/api/users/:id', async (req, res) => {
         const id = req.params.id;
